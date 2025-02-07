@@ -30,7 +30,7 @@ async def build_image(
         "status": "Sent to processing queue",
         "data": {
             "dockerfile": dockerfile,
-            "optional_files": optional_files
+            "optional_files": files_dict
         }
     }
 
