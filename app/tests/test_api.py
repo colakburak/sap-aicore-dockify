@@ -6,8 +6,13 @@ from app.main import app
 
 client = TestClient(app)
 
+@patch("app.main.build_and_push_image.delay")
+def test_build_image(mock_delay):
+    # mock celery task delay method to return dummy task
+    dummy_task = MagicMock()
+    dummy_task.id = "dummy-task-id"
+    mock_delay.return_value = dummy_task
 
-def test_build_image():
     # mock dockerfile
     dockerfile = b"FROM python:3.9\nRUN pip install requests"
     files = {"dockerfile": ("Dockerfile", dockerfile)}
