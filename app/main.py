@@ -1,32 +1,39 @@
 from fastapi import FastAPI, UploadFile
 from celery.result import AsyncResult
 
+from app.tasks import build_and_push_image
+
 app = FastAPI()
 
 
 @app.post("/build")
 async def build_image(
-    image_name: str,
+    user_name: str,
+    repo: str,
     dockerfile: UploadFile,
-    optional_files: list[UploadFile] = []
+    tag: str = "latest",
+    optional_files: list[UploadFile] = [],
 ):
 
     # DockerFile Reading
-    dockerfile = await dockerfile.read()
+    dockerfileb = await dockerfile.read()
 
     # Optional File Reading
     files_dict = {}
     for file in optional_files:
         files_dict[file.filename] = await file.read()
 
-    # TODO Send files and image name to celery task queue
-    # Will get task_id from celery for each task
-    task = {}
-    task["id"] = "PLACEHOLDER-TASK-ID-123"
+    task = build_and_push_image.delay(
+        user_name, 
+        repo, 
+        tag, 
+        dockerfileb, 
+        files_dict, 
+    )
 
     return {
-        "task_id": task["id"],
-        "image_name": image_name,
+        "task_id": task.id,
+        "image_reference": f"{user_name}/{repo}:{tag}",
         "status": "Sent to processing queue",
         "data": {
             "dockerfile": dockerfile,
