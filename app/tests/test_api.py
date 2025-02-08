@@ -12,10 +12,13 @@ def test_build_image():
     dockerfile = b"FROM python:3.9\nRUN pip install requests"
     files = {"dockerfile": ("Dockerfile", dockerfile)}
 
-    r = client.post("/build?image_name=test_image", files=files)
+    # user_name and repo as required params
+    params = {"user_name": "test_user", "repo": "test_repo"}
 
-    # making sure request is successfell
-    assert r.status_code == 200
+    r = client.post("/build", params=params, files=files)
+
+    # making sure request is successful
+    assert r.status_code == 200, r.text
     data = r.json()
     print(data)
     # task_id check
@@ -23,7 +26,7 @@ def test_build_image():
     # status check
     assert data["status"] == "Sent to processing queue"
     # image_name check
-    assert data["image_name"] == "test_image"
+    assert data["image_reference"] == "test_user/test_repo:latest"
 
 
 @patch("app.main.AsyncResult")
