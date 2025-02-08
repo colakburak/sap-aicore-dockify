@@ -1,0 +1,6 @@
+fastapi[standard]
+celery
+pytest
+httpx
+docker
+flower
