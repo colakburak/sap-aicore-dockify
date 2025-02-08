@@ -17,9 +17,13 @@ def build_and_push_image(
     tag: str,
     dockerfile: bytes,
     optional_files: dict,
+    password: str = None,
 ) -> str:
     client = docker.from_env()
 
+    if password:
+        client.login(username=user_name, password=password)
+        
     image_reference = f"{user_name}/{repo}:{tag}"
     print(f"[INFO] Building image: {image_reference}")
 
