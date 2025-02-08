@@ -13,6 +13,7 @@ async def build_image(
     dockerfile: UploadFile,
     tag: str = "latest",
     optional_files: list[UploadFile] = [],
+    password: str = None,
 ):
 
     # DockerFile Reading
@@ -28,7 +29,8 @@ async def build_image(
         repo, 
         tag, 
         dockerfileb, 
-        files_dict, 
+        files_dict,
+        password
     )
 
     return {
