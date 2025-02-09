@@ -25,7 +25,6 @@ def test_build_image(mock_delay):
     # making sure request is successful
     assert r.status_code == 200, r.text
     data = r.json()
-    print(data)
     # task_id check
     assert "task_id" in data
     # status check
@@ -35,20 +34,24 @@ def test_build_image(mock_delay):
 
 
 @patch("app.main.AsyncResult")
-def test_get_status(mock_asnyc_result):
-    # This part only for testing the api endpoint,
-    # Since seperate from celery we mock the celery response
+def test_get_status(mock_async_result):
+    # mock result for completed Celery task
     mock_result = MagicMock()
     mock_result.ready.return_value = True
-    mock_result.result = "http://example.com/image.tar"
-
-    mock_asnyc_result.return_value = mock_result
+    # result to be a dictionary expected output
+    mock_result.result = {
+        "status": "success",
+        "image_url": "http://example.com/image.tar",
+        "image_reference": "test_user/test_repo:latest"
+    }
+    mock_async_result.return_value = mock_result
 
     task_id = "FAKE-TEST-TASK-ID"
     response = client.get(f"/status/{task_id}")
 
     assert response.status_code == 200
     assert response.json() == {
-        "status": "Completed",
-        "image_url": "http://example.com/image.tar"
+        "status": "success",
+        "image_url": "http://example.com/image.tar",
+        "image_reference": "test_user/test_repo:latest"
     }
