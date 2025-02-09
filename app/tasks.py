@@ -1,10 +1,15 @@
-import os
-import tempfile
-
-from celery import Celery
+import logging
 import docker
-
+from celery import Celery
 from app.tasks_utils import build_image, push_image
+
+
+# logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 
 app = Celery('tasks', backend='rpc://', broker='amqp://localhost')
@@ -25,14 +30,34 @@ def build_and_push_image(
         client.login(username=user_name, password=password)
         
     image_reference = f"{user_name}/{repo}:{tag}"
-    print(f"[INFO] Building image: {image_reference}")
+    logger.info("Building image: %s", image_reference)
+    try:
+        build_image(client, image_reference, dockerfile, optional_files)
+    except Exception as e:
+        logger.error("Error during build step: %s", e)
+        return {
+            "status": "failed",
+            "step": "build",
+            "error": str(e)
+        }
+    
+    try:
+        push_image(client, image_reference)
+    except Exception as e:
+        logger.error("Error during push step: %s", e)
+        return {
+            "status": "failed",
+            "step": "push",
+            "error": str(e)
+        }
 
-    build_image(client, image_reference, dockerfile, optional_files)
-    push_image(client, image_reference)
-
+    # Image URL from docker hub This can be changed to any other registry
     url = "https://hub.docker.com/r/" + user_name + "/" + repo
-    print(f"[INFO] Image URL: {url}")
+    logger.info("Image URL: %s", url)
 
-    return {"image_url": url,
-            "image_reference": image_reference} 
+    return {
+        "status": "success",
+        "image_url": url,
+        "image_reference": image_reference
+    } 
 

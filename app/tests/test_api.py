@@ -25,7 +25,6 @@ def test_build_image(mock_delay):
     # making sure request is successful
     assert r.status_code == 200, r.text
     data = r.json()
-    print(data)
     # task_id check
     assert "task_id" in data
     # status check
