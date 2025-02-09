@@ -1,7 +1,9 @@
 import os
 import tempfile
-
+import logging
 import docker
+
+logger = logging.getLogger(__name__)
 
 def build_image(
     client: docker.DockerClient,
@@ -30,16 +32,16 @@ def build_image(
                 rm=True
             )
             image = build[0]
-            print(f"[BUILD] Image with id: {image.id} tags:{image.tags} built successfully.")
+            logger.info("Image with id: %s and tags: %s built successfully.", image.id, image.tags)
             return image_reference
         except docker.errors.BuildError as err:
-            print(f"[BUILD] [BUILD ERROR] {err}")
+            logger.error("Build error: %s", err)
             raise
         except docker.errors.APIError as err:
-            print(f"[BUILD] [API ERROR] {err}")
+            logger.error("API error: %s", err)
             raise
         except Exception as err:
-            print(f"[BUILD] [ERROR] {err}")
+            logger.error("Unexpected error during build: %s", err)
             raise
 
 def push_image(
@@ -51,14 +53,13 @@ def push_image(
         push = client.images.push(image_reference, stream=True, decode=True)
 
         for log in push:
-            print(f"[PUSH] {log}")
+            logger.info("Push log: %s", log)
 
-        print(f"[PUSH] Image {image_reference} pushed to the registry.")
-        
+        logger.info("Image %s pushed to the registry successfully.", image_reference)        
         return image_reference
     except docker.errors.APIError as err:
-        print(f"[PUSH ERROR] {err}")
+        logger.error("Push API error: %s", err)
         raise
     except Exception as err:
-        print(f"[PUSH ERROR] {err}")
+        logger.error("Unexpected error during push: %s", err)
         raise
