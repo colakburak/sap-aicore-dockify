@@ -78,7 +78,7 @@ Broker between the FastAPI app and the Celery worker.
     docker compose up --build
     ```
 
-3. **Access the api via:** http://localhost:8000
+3. **Access the api via:** http://localhost:8000/docs
 
 4. **Access the RabbitMQ Management Console:** http://localhost:15672
 
@@ -116,17 +116,27 @@ Broker between the FastAPI app and the Celery worker.
 ### `GET /status/{task_id}`
 **Description:** Retrieves the status of a previously submitted image build task.
 
-**Response (if completed):**
+**Response (if completed succesfull):**
 ```json
 {
-  "status": "Completed",
-  "image_url": "https://hub.docker.com/r/user_name/repo"
+  "status": "success",
+  "image_url": "https://hub.docker.com/r/user_name/repo",
+  "image_reference": "user_name/repo:tag"
 }
 ```
 **Response (if still processing):**
 ```json
 {
   "status": "processing"
+}
+```
+
+**Response (if completed unsuccesfull):**
+```json
+{
+  "status": "failed",
+  "step": "build / push",
+  "error": "Error Message"
 }
 ```
 
